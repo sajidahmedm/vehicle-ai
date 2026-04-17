@@ -1,0 +1,51 @@
+Name,Variant,Fuel,Mileage,Price,Type
+Tata Altroz,XE,Petrol,18 km/l,700000,Compact Hatchback
+Maruti Suzuki Fronx,Sigma,Petrol,21 km/l,800000,Compact SUV
+Tata Altroz,XM,Diesel,20 km/l,800000,Compact Hatchback
+Maruti Suzuki Baleno,Sigma,Petrol,23 km/l,800000,Hatchback
+Maruti Suzuki Fronx,Delta,Petrol,20 km/l,850000,Compact SUV
+Hyundai i20,Sportz,Petrol,20 km/l,850000,Hatchback
+Toyota Glanza,G,Petrol,21 km/l,900000,Hatchback
+Maruti Swift,ZXI Plus,Petrol,22 km/l,900000,Hatchback
+Maruti Suzuki Fronx,Zeta,Petrol,19 km/l,950000,Compact SUV
+Hyundai i20,Asta,Diesel,22 km/l,1000000,Hatchback
+Maruti Suzuki Baleno,Alpha,Petrol,22 km/l,1000000,Hatchback
+Tata Altroz,XZ,Petrol,19 km/l,1050000,Hatchback
+Maruti Suzuki Fronx,Alpha,Petrol,18 km/l,1100000,Compact SUV
+Hyundai i20,Asta Opt,Petrol,20 km/l,1100000,Hatchback
+Honda City,V,Petrol,17 km/l,1200000,Sedan
+Tata Tiago EV,XZ Plus,Electric,250 km/charge,1204000,Electric Hatchback
+Maruti Ertiga,ZXI Plus,Petrol,20 km/l,1313000,MUV
+Tata Tigor EV,XZ Plus,Electric,315 km/charge,1375000,Electric Sedan
+Honda City,VX,Diesel,19 km/l,1400000,Sedan
+Maruti XL6,Alpha Plus,Petrol,20 km/l,1482000,MUV
+Tata Nexon,Fearless Plus PS Dark,Petrol,17 km/l,1560000,SUV
+Kia Seltos,HTK,Petrol,16 km/l,1600000,Compact SUV
+Honda City,ZX CVT,Petrol,18 km/l,1655000,Sedan
+Tata Nexon EV,45 Red Dark,Electric,325 km/charge,1719000,Electric SUV
+Hyundai Verna,SX Opt Turbo DCT ,Petrol,20 km/l,1755000,Sedan
+Mahindra Thar,Earth Edition,Diesel,13 km/l,1760000,SUV
+Kia Seltos,HTK Plus,Diesel,18 km/l,1800000,Compact SUV
+Skoda Slavia,Prestige DSG,Petrol,19 km/l,1834000,Sedan
+Volkswagen Virtus,GT Plus Sport,Petrol,19 km/l,1940000,Sedan
+Kia Carens,X-Line DCT,Petrol,16 km/l,1970000,MUV
+Maruti Grand Vitara Hybrid,Alpha Plus DCT,Hybrid,27 km/l,1993000,Hybrid SUV
+Toyota Urban Cruiser Hyryder,V Hybrid,Hybrid,27 km/l,1999000,Hybrid SUV
+Mahindra BE 6,Pack One ,Electric,500 km/charge,2006000,SUV
+Kia Seltos,GTX Turbo,Petrol,16 km/l,2030000,SUV
+Hyundai Creta,SX(O) Turbo,Petrol,16 km/l,2050000,SUV
+Honda City Hybrid eHEV,ZX CVT,Hybrid,27 km/l,2075000,Hybrid Sedan
+Hyundai Alcazar,Signature DCT,Petrol,14 km/l,2155000,SUV
+MG Hector,Sharp Pro,Petrol,13 km/l,2200000,SUV
+MG Hector Plus,SnowStorm,Diesel,12 km/l,2200000,SUV
+Tata Harrier,Fearless Plus  Dark,Diesel,14 km/l,2449000,SUV
+Mahindra Scorpio N,Z8L Carbon Edition,Diesel,14 km/l,2489000,SUV
+BYD Atto 3,Dynamic,Electric,521 km/charge,2499000,Electric SUV
+Tata Safari,Plus Dark 6S,Diesel,14 km/l,2539000,SUV
+Mahindra XUV700,AX7L ,Diesel,15 km/l,2574000,SUV
+MG ZS EV,Essence,Electric,461 km/charge,2644000,Electric SUV
+Toyota Innova Crysta,2.4 ZX 7STL,Diesel,11 km/l,2682000,MUV
+Isuzu V-Cross,Z Prestige,Diesel,12 km/l,2692000,Pickup Truck
+Jeep Compass,Model S Opt FWD AT,Diesel,15 km/l,3000000,SUV
+Toyota Innova Hycross,ZX Hybrid,Hybrid,21 km/l,3070000,MUV
+Toyota Fortuner,GR S 4X4 AT,Diesel,12 km/l,5194000,SUV
