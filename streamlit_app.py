@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import requests
 
-st.set_page_config(page_title="AI based Vehicle Recommendation", layout="wide")
+st.set_page_config(page_title="Vehicle Advisor AI", layout="wide")
 
+# ---------- SESSION ----------
 if 'page' not in st.session_state:
     st.session_state.page = 'home'
 if 'recommendations' not in st.session_state:
@@ -13,14 +14,16 @@ if 'show_showroom' not in st.session_state:
 if 'vehicle_type' not in st.session_state:
     st.session_state.vehicle_type = None
 
+# ---------- LOAD DATA ----------
 @st.cache_data
 def load_showroom_data():
-    df = pd.read_csv("showrooms1.csv", sep=",", quotechar='"', engine='python', on_bad_lines='skip')
-    df.columns = df.columns.str.strip().str.replace('\n', '').str.replace('\r', '').str.replace('"', '')
+    df = pd.read_csv("showrooms1.csv", sep=",", engine='python')
+    df.columns = df.columns.str.strip().str.replace('\n','')
     return df
 
 showroom_df = load_showroom_data()
 
+# ---------- UI ----------
 st.markdown("""
 <style>
 .stApp {
@@ -28,37 +31,42 @@ st.markdown("""
     background-size: cover;
 }
 h1, label { color: white; }
+
 .vehicle-card {
     background: rgba(0,0,0,0.6);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
+    transition: 0.3s;
+}
+.vehicle-card:hover {
+    transform: scale(1.05);
+    background: rgba(0,0,0,0.9);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# -------- HOME PAGE --------
+# ---------- HOME ----------
 if st.session_state.page == 'home':
-    st.markdown("<h1 style='text-align:center;'>🚘 AI Vehicle Recommendation System</h1>", unsafe_allow_html=True)
 
-    with st.form("user_input"):
-        age = st.number_input("Enter your age", min_value=0, step=1)
-        salary = st.number_input("Enter your monthly salary (₹)", step=1000)
-        vehicle_type = st.selectbox("Preferred Vehicle Type", ["Scooter", "Bike", "Car"])
-        submitted = st.form_submit_button("Get Recommendations")
+    st.markdown("<h1 style='text-align:center;'>🚘 AI Based Vehicle Recommendation</h1>", unsafe_allow_html=True)
 
-    if submitted:
+    with st.form("user_form"):
+        age = st.number_input("Enter your age", min_value=0)
+        salary = st.number_input("Enter your monthly salary (₹)")
+        vehicle_type = st.selectbox("Preferred Vehicle Type", ["Scooter","Bike","Car"])
+        submit = st.form_submit_button("Get Recommendations")
+
+    if submit:
         if age < 18:
-            st.warning("No vehicles for age under 18.")
+            st.warning("No vehicles for age under 18")
         else:
-            type_map = {"Scooter": 0, "Bike": 1, "Car": 2}
-
             payload = {
                 "age": age,
                 "salary": salary,
-                "vehicleType": type_map[vehicle_type]
+                "vehicleType": {"Scooter":0,"Bike":1,"Car":2}[vehicle_type]
             }
 
-            st.info("⏳ First request may take 30–60 sec (free backend waking up)")
+            st.info("⏳ First request may take 30 sec (free backend)")
 
             try:
                 response = requests.post(
@@ -74,40 +82,93 @@ if st.session_state.page == 'home':
                         st.session_state.vehicle_type = vehicle_type
                         st.session_state.page = 'recommendations'
                     except:
-                        st.error("⚠️ Backend waking up... Try again in 30 sec")
+                        st.error("Backend waking up... try again")
                 else:
-                    st.error(f"Error: {response.text}")
+                    st.error(response.text)
 
             except Exception as e:
                 st.error(f"Backend error: {e}")
 
-# -------- RECOMMENDATIONS --------
+# ---------- RECOMMENDATIONS ----------
 elif st.session_state.page == 'recommendations':
+
     st.title("Recommended Vehicles")
+
+    # SIDEBAR
+    with st.sidebar:
+        st.markdown("### 📍 Showroom Info")
+        st.session_state.show_showroom = st.checkbox("Show Nearby Showrooms")
+
+        if st.session_state.show_showroom:
+            if st.button("View Showrooms"):
+                st.session_state.page = 'showrooms'
 
     if not st.session_state.recommendations:
         st.warning("No recommendations found")
         if st.button("Back"):
             st.session_state.page = 'home'
+
     else:
         cols = st.columns(3)
+
         for i, rec in enumerate(st.session_state.recommendations):
             with cols[i % 3]:
+                name = rec['name']
+                price = float(rec['price'])
+                mileage = rec.get('mileage', 'N/A')
+                fuel = rec.get('fuel', 'N/A')
+
                 st.markdown(f"""
                 <div class='vehicle-card'>
-                    <h4>{rec['name']}</h4>
-                    <p>Price: ₹{float(rec['price']):,.0f}</p>
-                    <p>Mileage: {rec.get('mileage','N/A')}</p>
-                    <p>Fuel: {rec.get('fuel','N/A')}</p>
+                    <h4>{name}</h4>
+                    <p><b>Price:</b> ₹{price:,.0f}</p>
+                    <p><b>Mileage:</b> {mileage}</p>
+                    <p><b>Fuel:</b> {fuel}</p>
+
+                    <details>
+                    <summary><b>EMI Options</b></summary>
+                    <ul>
+                        <li>1 Year: ₹{price/12:,.0f}/month</li>
+                        <li>3 Years: ₹{price/36:,.0f}/month</li>
+                        <li>5 Years: ₹{price/60:,.0f}/month</li>
+                    </ul>
+                    </details>
                 </div>
                 """, unsafe_allow_html=True)
 
         if st.button("Back"):
             st.session_state.page = 'home'
 
-# -------- SHOWROOM --------
+# ---------- SHOWROOM ----------
 elif st.session_state.page == 'showrooms':
-    st.title("Showrooms")
+
+    st.title("Nearby Showrooms")
+
+    recommended_brands = set([rec['name'].split()[0].lower() for rec in st.session_state.recommendations])
+
+    showroom_df['Brand'] = showroom_df['Brand'].astype(str).str.lower()
+
+    filtered = showroom_df[showroom_df['Brand'].isin(recommended_brands)]
+
+    if filtered.empty:
+        st.warning("No showroom data found")
+    else:
+        for _, row in filtered.iterrows():
+            showroom_name = row['Showroom Name']
+            address = row['Address']
+            pincode = row.get('Pincode','')
+
+            maps_query = f"{showroom_name},{address},{pincode}".replace(" ","+")
+            maps_url = f"https://www.google.com/maps/search/?api=1&query={maps_query}"
+
+            st.markdown(f"""
+            <div class='vehicle-card'>
+                <b>{showroom_name}</b><br>
+                {address}<br>
+                {pincode}<br>
+                <a href="{maps_url}" target="_blank">View on Map</a>
+            </div>
+            """, unsafe_allow_html=True)
 
     if st.button("Back"):
         st.session_state.page = 'recommendations'
