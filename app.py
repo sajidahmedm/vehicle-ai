@@ -39,6 +39,9 @@ y_pred = vehicle_model.predict(X_vehicle)
 accuracy = r2_score(y_vehicle, y_pred)
 print(f"Vehicle Price Prediction Model R² Accuracy: {accuracy:.2f}")
 
+@app.route("/")
+def home():
+    return "Backend is running"
 @app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.json

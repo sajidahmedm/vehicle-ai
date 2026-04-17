@@ -68,7 +68,7 @@ if st.session_state.page == 'home':
 
             with st.spinner("Fetching recommendations..."):
                 try:
-                    response = requests.post("http://127.0.0.1:5000/recommend", json=payload)
+                    response = requests.post("https://vehicle-ai-uy20.onrender.com/recommend")
                     st.session_state.recommendations = response.json()
                     st.session_state.page = 'recommendations'
                 except Exception as e:
