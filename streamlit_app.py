@@ -66,7 +66,7 @@ if st.session_state.page == 'home':
                 "vehicleType": {"Scooter":0,"Bike":1,"Car":2}[vehicle_type]
             }
 
-            st.info("⏳ First request may take 30 sec (free backend)")
+            st.info("⏳ First request may take 30 sec (free backend waking up)")
 
             try:
                 response = requests.post(
@@ -82,7 +82,7 @@ if st.session_state.page == 'home':
                         st.session_state.vehicle_type = vehicle_type
                         st.session_state.page = 'recommendations'
                     except:
-                        st.error("Backend waking up... try again")
+                        st.error("⚠️ Backend waking up... try again in 30 sec")
                 else:
                     st.error(response.text)
 
@@ -118,23 +118,21 @@ elif st.session_state.page == 'recommendations':
                 mileage = rec.get('mileage', 'N/A')
                 fuel = rec.get('fuel', 'N/A')
 
+                # CARD
                 st.markdown(f"""
                 <div class='vehicle-card'>
                     <h4>{name}</h4>
                     <p><b>Price:</b> ₹{price:,.0f}</p>
                     <p><b>Mileage:</b> {mileage}</p>
                     <p><b>Fuel:</b> {fuel}</p>
-
-                    <details>
-                    <summary><b>EMI Options</b></summary>
-                    <ul>
-                        <li>1 Year: ₹{price/12:,.0f}/month</li>
-                        <li>3 Years: ₹{price/36:,.0f}/month</li>
-                        <li>5 Years: ₹{price/60:,.0f}/month</li>
-                    </ul>
-                    </details>
                 </div>
                 """, unsafe_allow_html=True)
+
+                # EMI OPTIONS (FIXED)
+                with st.expander("💰 EMI Options"):
+                    st.write(f"1 Year: ₹{price/12:,.0f} / month")
+                    st.write(f"3 Years: ₹{price/36:,.0f} / month")
+                    st.write(f"5 Years: ₹{price/60:,.0f} / month")
 
         if st.button("Back"):
             st.session_state.page = 'home'
@@ -166,7 +164,7 @@ elif st.session_state.page == 'showrooms':
                 <b>{showroom_name}</b><br>
                 {address}<br>
                 {pincode}<br>
-                <a href="{maps_url}" target="_blank">View on Map</a>
+                <a href="{maps_url}" target="_blank">🗺️ View on Map</a>
             </div>
             """, unsafe_allow_html=True)
 
