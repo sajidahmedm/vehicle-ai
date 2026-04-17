@@ -129,7 +129,7 @@ elif st.session_state.page == 'recommendations':
                 """, unsafe_allow_html=True)
 
                 # EMI OPTIONS (FIXED)
-                with st.expander("💰 EMI Options"):
+                with st.expander("EMI Options"):
                     st.write(f"1 Year: ₹{price/12:,.0f} / month")
                     st.write(f"3 Years: ₹{price/36:,.0f} / month")
                     st.write(f"5 Years: ₹{price/60:,.0f} / month")
