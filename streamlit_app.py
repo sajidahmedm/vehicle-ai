@@ -66,76 +66,39 @@ if st.session_state.page == 'home':
                 "vehicleType": {"Scooter":0,"Bike":1,"Car":2}[vehicle_type]
             }
 
-            st.info("⏳ First request may take 30 sec (free backend waking up)")
+            st.info("⏳ Connecting... first request may take up to 60 sec")
 
             try:
                 response = requests.post(
                     "https://vehicle-ai-uy20.onrender.com/recommend",
                     json=payload,
-                    timeout=15
+                    timeout=60
                 )
 
                 if response.status_code == 200:
                     try:
                         data = response.json()
-                        st.session_state.recommendations = data
-                        st.session_state.vehicle_type = vehicle_type
-                        st.session_state.page = 'recommendations'
+
+                        if not data:
+                            st.warning("No recommendations found")
+                        else:
+                            st.session_state.recommendations = data
+                            st.session_state.vehicle_type = vehicle_type
+                            st.session_state.page = 'recommendations'
+
                     except:
-                        st.error("⚠️ Backend waking up... try again in 30 sec")
+                        st.warning("⚠️ Server responded but data not ready. Try again.")
                 else:
-                    st.error(response.text)
+                    st.error("❌ Server error. Please try again.")
+
+            except requests.exceptions.Timeout:
+                st.warning("⚠️ Server is waking up... click again after few seconds")
+
+            except requests.exceptions.ConnectionError:
+                st.error("❌ Network issue. Check internet connection.")
 
             except Exception as e:
-                st.error(f"Backend error: {e}")
-
-# ---------- RECOMMENDATIONS ----------
-elif st.session_state.page == 'recommendations':
-
-    st.title("Recommended Vehicles")
-
-    # SIDEBAR
-    with st.sidebar:
-        st.markdown("### 📍 Showroom Info")
-        st.session_state.show_showroom = st.checkbox("Show Nearby Showrooms")
-
-        if st.session_state.show_showroom:
-            if st.button("View Showrooms"):
-                st.session_state.page = 'showrooms'
-
-    if not st.session_state.recommendations:
-        st.warning("No recommendations found")
-        if st.button("Back"):
-            st.session_state.page = 'home'
-
-    else:
-        cols = st.columns(3)
-
-        for i, rec in enumerate(st.session_state.recommendations):
-            with cols[i % 3]:
-                name = rec['name']
-                price = float(rec['price'])
-                mileage = rec.get('mileage', 'N/A')
-                fuel = rec.get('fuel', 'N/A')
-
-                # CARD
-                st.markdown(f"""
-                <div class='vehicle-card'>
-                    <h4>{name}</h4>
-                    <p><b>Price:</b> ₹{price:,.0f}</p>
-                    <p><b>Mileage:</b> {mileage}</p>
-                    <p><b>Fuel:</b> {fuel}</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-                # EMI OPTIONS (FIXED)
-                with st.expander("EMI Options"):
-                    st.write(f"1 Year: ₹{price/12:,.0f} / month")
-                    st.write(f"3 Years: ₹{price/36:,.0f} / month")
-                    st.write(f"5 Years: ₹{price/60:,.0f} / month")
-
-        if st.button("Back"):
-            st.session_state.page = 'home'
+                st.error(f"Unexpected error: {e}")
 
 # ---------- SHOWROOM ----------
 elif st.session_state.page == 'showrooms':
