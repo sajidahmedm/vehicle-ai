@@ -100,6 +100,53 @@ if st.session_state.page == 'home':
             except Exception as e:
                 st.error(f"Unexpected error: {e}")
 
+# ---------- RECOMMENDATIONS (MISSING PART FIXED) ----------
+elif st.session_state.page == 'recommendations':
+
+    st.title("Recommended Vehicles")
+
+    # SIDEBAR
+    with st.sidebar:
+        st.markdown("### 📍 Showroom Info")
+        st.session_state.show_showroom = st.checkbox("Show Nearby Showrooms")
+
+        if st.session_state.show_showroom:
+            if st.button("View Showrooms"):
+                st.session_state.page = 'showrooms'
+
+    if not st.session_state.recommendations:
+        st.warning("No recommendations found")
+        if st.button("Back"):
+            st.session_state.page = 'home'
+
+    else:
+        cols = st.columns(3)
+
+        for i, rec in enumerate(st.session_state.recommendations):
+            with cols[i % 3]:
+                name = rec['name']
+                price = float(rec['price'])
+                mileage = rec.get('mileage', 'N/A')
+                fuel = rec.get('fuel', 'N/A')
+
+                st.markdown(f"""
+                <div class='vehicle-card'>
+                    <h4>{name}</h4>
+                    <p><b>Price:</b> ₹{price:,.0f}</p>
+                    <p><b>Mileage:</b> {mileage}</p>
+                    <p><b>Fuel:</b> {fuel}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # EMI
+                with st.expander("₹ EMI Options"):
+                    st.write(f"1 Year: ₹{price/12:,.0f} / month")
+                    st.write(f"3 Years: ₹{price/36:,.0f} / month")
+                    st.write(f"5 Years: ₹{price/60:,.0f} / month")
+
+        if st.button("Back"):
+            st.session_state.page = 'home'
+
 # ---------- SHOWROOM ----------
 elif st.session_state.page == 'showrooms':
 
