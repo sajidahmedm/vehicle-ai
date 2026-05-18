@@ -62,7 +62,8 @@ def recommend():
 
     age = int(data.get("age"))
     salary = float(data.get("salary"))
-    v_type = int(data.get("vehicleType")) 
+    v_type = int(data.get("vehicleType"))
+
     # 0 = Scooter
     # 1 = Bike
     # 2 = Car
@@ -73,21 +74,25 @@ def recommend():
 
     if v_type == 2:
 
-        # Allow users age 18+ and salary 50k+
-        if age >= 18 or salary >= 50000:
+        # ONLY CHANGE MADE:
+        # Cars recommended for:
+        # age >= 18
+        # salary >= 50000
+
+        if age < 18 or salary < 50000:
             return jsonify([])
 
         if 50000 <= salary <= 100000:
-            cars = car_df[car_df["Price"] <= 1300000]
+            cars = car_df.head(10)
 
         elif 100000 < salary < 150000:
-            cars = car_df[car_df["Price"] <= 1900000]
+            cars = car_df.head(20)
 
         elif 150000 <= salary <= 300000:
-            cars = car_df[car_df["Price"] <= 3200000]
+            cars = car_df.head(30)
 
         elif salary > 300000:
-            cars = car_df[car_df["Price"] > 1900000]
+            cars = car_df
 
         else:
             cars = pd.DataFrame()

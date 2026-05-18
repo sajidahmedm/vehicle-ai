@@ -71,6 +71,7 @@ if st.session_state.page == 'home':
             try:
                 response = requests.post(
                     "https://vehicle-ai-uy20.onrender.com/recommend",
+                    # "http://127.0.0.1:5000/recommend",
                     json=payload,
                     timeout=60
                 )
