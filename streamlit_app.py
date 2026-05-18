@@ -70,7 +70,7 @@ if st.session_state.page == 'home':
 
             try:
                 response = requests.post(
-                    "https://vehicle-ai-uy20.onrender.com/recommend",
+                    "https://vehicle-ai-uy20-7odh.onrender.com",
                     # "http://127.0.0.1:5000/recommend",
                     json=payload,
                     timeout=60
