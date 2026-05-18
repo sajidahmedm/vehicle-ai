@@ -1,6 +1,6 @@
-Flask
+flask
 pandas
 scikit-learn
-Flask-Cors
+flask-cors
 gunicorn
 
