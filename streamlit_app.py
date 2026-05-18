@@ -1,186 +1,265 @@
-from flask import Flask, request, jsonify
+# streamlit_app.py
+
+import streamlit as st
 import pandas as pd
-import re
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import r2_score
-from flask_cors import CORS
+import requests
 
-app = Flask(__name__)
-CORS(app)
+st.set_page_config(page_title="Vehicle Advisor AI", layout="wide")
 
-# Load data
-vehicle_df = pd.read_csv("updated_expanded_vehicle.csv")
-car_df = pd.read_csv("updated_expanded_car.csv")
+# ---------- SESSION ----------
+if 'page' not in st.session_state:
+    st.session_state.page = 'home'
+if 'recommendations' not in st.session_state:
+    st.session_state.recommendations = []
+if 'show_showroom' not in st.session_state:
+    st.session_state.show_showroom = False
+if 'vehicle_type' not in st.session_state:
+    st.session_state.vehicle_type = None
 
-# Clean Price columns
-vehicle_df["Price"] = vehicle_df["Price"].replace(r"[₹,]", "", regex=True).astype(float)
-car_df["Price"] = car_df["Price"].replace(r"[₹,]", "", regex=True).astype(float)
+# ---------- LOAD DATA ----------
+@st.cache_data
+def load_showroom_data():
+    df = pd.read_csv("showrooms1.csv", sep=",", engine='python')
+    df.columns = df.columns.str.strip().str.replace('\n','')
+    return df
 
-# Preprocess Mileage
-vehicle_df["Mileage"] = vehicle_df["Mileage"].apply(
-    lambda x: float(re.sub(r"[^0-9.]", "", str(x))) if pd.notna(x) else 0
-)
+showroom_df = load_showroom_data()
 
-car_df["Mileage"] = car_df["Mileage"].apply(
-    lambda x: float(re.sub(r"[^0-9.]", "", str(x))) if pd.notna(x) else 0
-)
+# ---------- UI ----------
+st.markdown("""
+<style>
+.stApp {
+    background-image: url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1966&auto=format&fit=crop");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
 
-# Label Encoding
-type_encoder = LabelEncoder()
-fuel_encoder_vehicle = LabelEncoder()
-variant_encoder = LabelEncoder()
-fuel_encoder_car = LabelEncoder()
+h1, h2, h3, h4, h5, h6, label, p {
+    color: white !important;
+}
 
-vehicle_df["TypeEncoded"] = type_encoder.fit_transform(vehicle_df["Type"])
-vehicle_df["FuelEncoded"] = fuel_encoder_vehicle.fit_transform(vehicle_df["Fuel"])
+.vehicle-card {
+    background: rgba(0,0,0,0.65);
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 15px;
+    transition: 0.3s;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
+}
 
-car_df["VariantEncoded"] = variant_encoder.fit_transform(car_df["Variant"])
-car_df["FuelEncoded"] = fuel_encoder_car.fit_transform(car_df["Fuel"])
+.vehicle-card:hover {
+    transform: scale(1.03);
+    background: rgba(0,0,0,0.85);
+}
 
-# Train Linear Regression Model
-X_vehicle = vehicle_df[["TypeEncoded", "FuelEncoded", "Mileage"]]
-y_vehicle = vehicle_df["Price"]
+.stButton>button {
+    width: 100%;
+    border-radius: 10px;
+    height: 45px;
+    font-size: 16px;
+    font-weight: bold;
+}
 
-vehicle_model = LinearRegression()
-vehicle_model.fit(X_vehicle, y_vehicle)
+[data-testid="stSidebar"] {
+    background: rgba(0,0,0,0.75);
+}
 
-# Accuracy
-y_pred = vehicle_model.predict(X_vehicle)
-accuracy = r2_score(y_vehicle, y_pred)
+</style>
+""", unsafe_allow_html=True)
 
-print(f"Vehicle Price Prediction Model R² Accuracy: {accuracy:.2f}")
+# ---------- HOME PAGE ----------
+if st.session_state.page == 'home':
 
-@app.route("/")
-def home():
-    return "Backend is running"
+    st.markdown(
+        "<h1 style='text-align:center;'>🚘 AI Based Vehicle Recommendation</h1>",
+        unsafe_allow_html=True
+    )
 
-# ---------------- RECOMMEND ROUTE ---------------- #
+    st.write("")
 
-@app.route("/recommend", methods=["POST"])
-def recommend():
+    with st.form("user_form"):
 
-    try:
+        age = st.number_input(
+            "Enter your age",
+            min_value=0,
+            step=1
+        )
 
-        data = request.json
+        salary = st.number_input(
+            "Enter your monthly salary (₹)",
+            min_value=0.0,
+            step=1000.0
+        )
 
-        print("DATA RECEIVED:", data)
+        vehicle_type = st.selectbox(
+            "Preferred Vehicle Type",
+            ["Scooter", "Bike", "Car"]
+        )
 
-        age = int(data.get("age"))
-        salary = float(data.get("salary"))
-        v_type = int(data.get("vehicleType"))
+        submit = st.form_submit_button("Get Recommendations")
 
-        print("AGE:", age)
-        print("SALARY:", salary)
-        print("VEHICLE TYPE:", v_type)
+    if submit:
 
-        results = []
-
-        # ---------------- CAR RECOMMENDATION ---------------- #
-
-        if v_type == 2:
-
-            # Cars only for users age >=18 and salary >=50000
-            if age < 18 or salary < 50000:
-                return jsonify([])
-
-            if 50000 <= salary <= 100000:
-                cars = car_df[car_df["Price"] <= 1300000]
-
-            elif 100000 < salary < 150000:
-                cars = car_df[car_df["Price"] <= 1900000]
-
-            elif 150000 <= salary <= 300000:
-                cars = car_df[car_df["Price"] <= 3200000]
-
-            elif salary > 300000:
-                cars = car_df[car_df["Price"] > 1900000]
-
-            else:
-                cars = pd.DataFrame()
-
-            print("Filtered Cars:", len(cars))
-
-            # DEBUG fallback if filtering gives empty
-            if cars.empty:
-                cars = car_df.head(10)
-
-            for _, row in cars.iterrows():
-
-                results.append({
-                    "name": str(row["Name"]),
-                    "price": float(row["Price"]),
-                    "mileage": row.get("Mileage", "N/A"),
-                    "fuel": row.get("Fuel", "N/A")
-                })
-
-        # ---------------- BIKE / SCOOTER RECOMMENDATION ---------------- #
+        if age < 18:
+            st.warning("No vehicles for age under 18")
 
         else:
 
-            if salary < 20000 or age < 18:
-                return jsonify([])
+            payload = {
+                "age": age,
+                "salary": salary,
+                "vehicleType": {
+                    "Scooter": 0,
+                    "Bike": 1,
+                    "Car": 2
+                }[vehicle_type]
+            }
 
-            target_encoded = type_encoder.transform(
-                [["Scooter", "Bike"][v_type]]
-            )[0]
+            st.info("⏳ Connecting... first request may take up to 60 sec")
 
-            min_price = 0
-            max_price = float("inf")
+            try:
 
-            if 18 <= age <= 35:
+                response = requests.post(
+                    "https://vehicle-ai-uy20-7odh.onrender.com/recommend",
+                    json=payload,
+                    timeout=60
+                )
 
-                if 20000 <= salary <= 50000:
-                    max_price = 100000
+                if response.status_code == 200:
 
-                elif 50000 < salary <= 100000:
-                    min_price = 100000
-                    max_price = 200000
+                    data = response.json()
 
-            elif 36 <= age <= 70:
+                    if not data:
+                        st.warning("No recommendations found")
 
-                if 20000 <= salary <= 50000:
-                    max_price = 100000
+                    else:
+                        st.session_state.recommendations = data
+                        st.session_state.vehicle_type = vehicle_type
+                        st.session_state.page = 'recommendations'
+                        st.rerun()
 
-                elif 36 <= age <= 50 and 50000 < salary <= 100000:
-                    min_price = 100000
-                    max_price = 150000
+                else:
+                    st.error("❌ Server error. Please try again.")
 
-                elif 51 <= age <= 70 and salary > 50000:
-                    max_price = 150000
+            except requests.exceptions.Timeout:
+                st.warning("⚠️ Server is waking up... click again after few seconds")
 
-                elif salary > 100000:
-                    max_price = 300000
+            except requests.exceptions.ConnectionError:
+                st.error("❌ Network issue. Check internet connection.")
 
-            for _, row in vehicle_df.iterrows():
+            except Exception as e:
+                st.error(f"Unexpected error: {e}")
 
-                if row["TypeEncoded"] == target_encoded:
+# ---------- RECOMMENDATION PAGE ----------
+elif st.session_state.page == 'recommendations':
 
-                    features = [[
-                        row["TypeEncoded"],
-                        row["FuelEncoded"],
-                        row["Mileage"]
-                    ]]
+    st.title("🚗 Recommended Vehicles")
 
-                    pred_price = vehicle_model.predict(features)[0]
+    # ---------- SIDEBAR ----------
+    with st.sidebar:
 
-                    if min_price <= pred_price <= max_price:
+        st.markdown("## 📍 Showroom Information")
 
-                        results.append({
-                            "name": row["Name"],
-                            "price": round(pred_price, 2),
-                            "mileage": row.get("Mileage", "N/A"),
-                            "fuel": row.get("Fuel", "N/A")
-                        })
+        st.session_state.show_showroom = st.checkbox(
+            "Show Nearby Showrooms"
+        )
 
-        print("TOTAL RESULTS:", len(results))
+        if st.session_state.show_showroom:
 
-        return jsonify(results)
+            if st.button("View Showrooms"):
+                st.session_state.page = 'showrooms'
+                st.rerun()
 
-    except Exception as e:
+    # ---------- EMPTY RESULT ----------
+    if not st.session_state.recommendations:
 
-        print("ERROR:", str(e))
+        st.warning("No recommendations found")
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        if st.button("⬅ Back"):
+            st.session_state.page = 'home'
+            st.rerun()
+
+    # ---------- DISPLAY VEHICLES ----------
+    else:
+
+        cols = st.columns(3)
+
+        for i, rec in enumerate(st.session_state.recommendations):
+
+            with cols[i % 3]:
+
+                name = rec['name']
+                price = float(rec['price'])
+                mileage = rec.get('mileage', 'N/A')
+                fuel = rec.get('fuel', 'N/A')
+
+                st.markdown(f"""
+                <div class='vehicle-card'>
+                    <h3>{name}</h3>
+                    <p><b>💰 Price:</b> ₹{price:,.0f}</p>
+                    <p><b>⛽ Mileage:</b> {mileage}</p>
+                    <p><b>🛢 Fuel:</b> {fuel}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # ---------- EMI ----------
+                with st.expander("₹ EMI Options"):
+
+                    st.write(f"1 Year EMI: ₹{price/12:,.0f} / month")
+                    st.write(f"3 Year EMI: ₹{price/36:,.0f} / month")
+                    st.write(f"5 Year EMI: ₹{price/60:,.0f} / month")
+
+        if st.button("⬅ Back"):
+            st.session_state.page = 'home'
+            st.rerun()
+
+# ---------- SHOWROOM PAGE ----------
+elif st.session_state.page == 'showrooms':
+
+    st.title("🏢 Nearby Showrooms")
+
+    recommended_brands = set([
+        rec['name'].split()[0].lower()
+        for rec in st.session_state.recommendations
+    ])
+
+    showroom_df['Brand'] = showroom_df['Brand'].astype(str).str.lower()
+
+    filtered = showroom_df[
+        showroom_df['Brand'].isin(recommended_brands)
+    ]
+
+    if filtered.empty:
+
+        st.warning("No showroom data found")
+
+    else:
+
+        for _, row in filtered.iterrows():
+
+            showroom_name = row['Showroom Name']
+            address = row['Address']
+            pincode = row.get('Pincode', '')
+
+            maps_query = f"{showroom_name},{address},{pincode}".replace(" ", "+")
+
+            maps_url = (
+                f"https://www.google.com/maps/search/?api=1&query={maps_query}"
+            )
+
+            st.markdown(f"""
+            <div class='vehicle-card'>
+                <h4>{showroom_name}</h4>
+                <p>{address}</p>
+                <p>{pincode}</p>
+                <a href="{maps_url}" target="_blank">
+                    🗺️ View on Google Maps
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+
+    if st.button("⬅ Back"):
+        st.session_state.page = 'recommendations'
+        st.rerun()
+
